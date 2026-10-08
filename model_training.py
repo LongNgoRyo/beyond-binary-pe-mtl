@@ -62,7 +62,7 @@ import matplotlib.cm as cm
 
 warnings.filterwarnings('ignore')
 
-# Khai báo biến kiểm tra các thư viện XAI ngoài
+# Khai báo biến kiểm tra các thư viện XAI bên ngoài
 HAS_CAPTUM = True
 try:
     import captum
@@ -848,7 +848,7 @@ class FamilyFocalLoss(nn.Module):
     def forward(self, logits, targets):
         if hasattr(self, 'log_prior_tensor') and self.log_prior_tensor is not None:
             log_prior = self.log_prior_tensor.to(logits.device)
-            # Menon et al. "Long-tail learning via logit adjustment" uses "+" in training:
+            # Menon et al. "Heavy-tail learning via logit adjustment" uses "+" in training:
             adjusted_logits = logits + self.tau * log_prior.unsqueeze(0)
         else:
             adjusted_logits = logits
@@ -966,7 +966,7 @@ def val_loss_full(model, criterion, X_val, yb_val, yf_val, ybeh_val, device):
         lb,lf,lbh=model(torch.tensor(X_val[sl],dtype=torch.float32).to(device))
         loss,*_=criterion(lb,lf,lbh,
             torch.tensor(yb_val[sl],dtype=torch.float32).to(device),
-            torch.tensor(yf_val[sl],dtype=torch.long).to(device),
+            torch.tensor(yf_val[sl],dtype=torch.int64).to(device),
             torch.tensor(ybeh_val[sl],dtype=torch.float32).to(device))
         total+=float(loss); n+=1
     model.train(); return total/max(1,n)
@@ -1147,12 +1147,12 @@ def train_epoch(model, criterion, optimizer, X_train, yb_train, yf_train, ybeh_t
             warmup_info['global_step'] += 1
             
         lb,lf_,lbh=model(torch.tensor(bX,dtype=torch.float32).to(device),
-                         yf=torch.tensor(bF,dtype=torch.long).to(device),
+                         yf=torch.tensor(bF,dtype=torch.int64).to(device),
                          mixup_alpha=mixup_alpha)
                          
         loss,l1,l2,l3=criterion(lb,lf_,lbh,
             torch.tensor(bB,  dtype=torch.float32).to(device),
-            torch.tensor(bF,  dtype=torch.long   ).to(device),
+            torch.tensor(bF,  dtype=torch.int64   ).to(device),
             torch.tensor(bBeh,dtype=torch.float32).to(device))
         loss.backward()
         nn.utils.clip_grad_norm_(model.parameters(), GRAD_CLIP)
@@ -1246,10 +1246,10 @@ def train_family_phase(model, fam_criterion, X_train, yf_train, aug_targets,
             
             # Áp dụng Manifold Mixup trên GPU
             _,lf,_=model(torch.tensor(bX,dtype=torch.float32).to(device),
-                          yf=torch.tensor(bF,dtype=torch.long).to(device),
+                          yf=torch.tensor(bF,dtype=torch.int64).to(device),
                           mixup_alpha=0.4)
                           
-            loss=fam_criterion(lf,torch.tensor(bF,dtype=torch.long).to(device))
+            loss=fam_criterion(lf,torch.tensor(bF,dtype=torch.int64).to(device))
             loss.backward()
             nn.utils.clip_grad_norm_(model.parameters(), GRAD_CLIP)
             opt2.step()
