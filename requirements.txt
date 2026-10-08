@@ -1,0 +1,13 @@
+torch>=2.0
+lightgbm>=4.0
+pandas>=1.5
+numpy>=1.24
+scikit-learn>=1.2
+lief>=0.14.0
+captum>=0.6.0
+lime>=0.2.0
+shap>=0.44.0
+scipy>=1.10
+tqdm
+matplotlib
+kagglehub
